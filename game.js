@@ -2,22 +2,22 @@
 //  오목 게임 로직 (Gomoku Game)
 // ================================
 
-const GRID_SIZE  = 15;         // 15x15 격자
-const CELL_SIZE  = 38;         // 셀 크기(px)
-const MARGIN     = 20;         // 여백
-const STONE_R    = 16;         // 돌 반지름
-const BLACK      = 1;
-const WHITE      = 2;
+const GRID_SIZE = 15;         // 15x15 격자
+const CELL_SIZE = 38;         // 셀 크기(px)
+const MARGIN = 20;         // 여백
+const STONE_R = 16;         // 돌 반지름
+const BLACK = 1;
+const WHITE = 2;
 
-let board        = [];         // 2D 배열: 0=empty, 1=black, 2=white
+let board = [];         // 2D 배열: 0=empty, 1=black, 2=white
 let currentPlayer = BLACK;
-let gameOver     = false;
-let moveHistory  = [];         // [{row,col,player}]
-let scores       = { [BLACK]: 0, [WHITE]: 0 };
-let hoverPos     = null;       // 마우스 호버 위치
+let gameOver = false;
+let moveHistory = [];         // [{row,col,player}]
+let scores = { [BLACK]: 0, [WHITE]: 0 };
+let hoverPos = null;       // 마우스 호버 위치
 
-const canvas  = document.getElementById('omok-board');
-const ctx     = canvas.getContext('2d');
+const canvas = document.getElementById('omok-board');
+const ctx = canvas.getContext('2d');
 
 // ─────────────────────────────
 //  초기화
@@ -57,16 +57,23 @@ function drawBoard() {
   // 배경
   ctx.clearRect(0, 0, cw, ch);
 
-  // 격자 그라데이션 배경
+  // 바둑판 나무색 배경
   const bgGrad = ctx.createLinearGradient(0, 0, cw, ch);
-  bgGrad.addColorStop(0, '#1e1b4b');
-  bgGrad.addColorStop(1, '#1e293b');
-  ctx.fillStyle = bgGrad;
+  bgGrad.addColorStop(0, '#d4a843');
+  bgGrad.addColorStop(0.5, '#c9983a');
+  bgGrad.addColorStop(1, '#b8862e');
   roundRect(ctx, 0, 0, cw, ch, 12);
+  ctx.fillStyle = bgGrad;
   ctx.fill();
 
+  // 나무결 질감 레이어
+  ctx.fillStyle = 'rgba(160, 100, 20, 0.08)';
+  for (let i = 0; i < 12; i++) {
+    ctx.fillRect(0, i * (ch / 12), cw, 1);
+  }
+
   // 격자선
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+  ctx.strokeStyle = 'rgba(80, 40, 0, 0.75)';
   ctx.lineWidth = 1;
 
   for (let i = 0; i < GRID_SIZE; i++) {
@@ -86,11 +93,11 @@ function drawBoard() {
 
   // 별점 (star points)
   const starPoints = [
-    [3,3],[3,7],[3,11],
-    [7,3],[7,7],[7,11],
-    [11,3],[11,7],[11,11]
+    [3, 3], [3, 7], [3, 11],
+    [7, 3], [7, 7], [7, 11],
+    [11, 3], [11, 7], [11, 11]
   ];
-  ctx.fillStyle = 'rgba(255,255,255,0.35)';
+  ctx.fillStyle = 'rgba(70, 35, 0, 0.85)';
   for (const [r, c] of starPoints) {
     ctx.beginPath();
     ctx.arc(MARGIN + c * CELL_SIZE, MARGIN + r * CELL_SIZE, 4, 0, Math.PI * 2);
@@ -106,8 +113,8 @@ function drawBoard() {
       ctx.beginPath();
       ctx.arc(cx, cy, STONE_R, 0, Math.PI * 2);
       ctx.fillStyle = currentPlayer === BLACK
-        ? 'rgba(30,30,60,0.45)'
-        : 'rgba(240,240,240,0.35)';
+        ? 'rgba(20,20,40,0.5)'
+        : 'rgba(245,245,245,0.5)';
       ctx.fill();
     }
   }
@@ -136,19 +143,19 @@ function drawBoard() {
 function drawStone(row, col, player) {
   const cx = MARGIN + col * CELL_SIZE;
   const cy = MARGIN + row * CELL_SIZE;
-  const r  = STONE_R;
+  const r = STONE_R;
 
   ctx.beginPath();
   ctx.arc(cx, cy, r, 0, Math.PI * 2);
 
   if (player === BLACK) {
-    const grad = ctx.createRadialGradient(cx - r*0.3, cy - r*0.3, r*0.1, cx, cy, r);
+    const grad = ctx.createRadialGradient(cx - r * 0.3, cy - r * 0.3, r * 0.1, cx, cy, r);
     grad.addColorStop(0, '#5a5a8a');
     grad.addColorStop(0.5, '#1c1c36');
     grad.addColorStop(1, '#0a0a1a');
     ctx.fillStyle = grad;
   } else {
-    const grad = ctx.createRadialGradient(cx - r*0.3, cy - r*0.35, r*0.1, cx, cy, r);
+    const grad = ctx.createRadialGradient(cx - r * 0.3, cy - r * 0.35, r * 0.1, cx, cy, r);
     grad.addColorStop(0, '#ffffff');
     grad.addColorStop(0.6, '#e0e0ef');
     grad.addColorStop(1, '#b0b0c8');
@@ -164,7 +171,7 @@ function drawStone(row, col, player) {
 
   // 광택 하이라이트
   ctx.beginPath();
-  ctx.arc(cx - r*0.28, cy - r*0.30, r*0.32, 0, Math.PI * 2);
+  ctx.arc(cx - r * 0.28, cy - r * 0.30, r * 0.32, 0, Math.PI * 2);
   ctx.fillStyle = player === BLACK
     ? 'rgba(255,255,255,0.12)'
     : 'rgba(255,255,255,0.45)';
@@ -175,7 +182,7 @@ function drawStone(row, col, player) {
 //  승리 체크
 // ─────────────────────────────
 function checkWin(row, col, player) {
-  const directions = [[0,1],[1,0],[1,1],[1,-1]];
+  const directions = [[0, 1], [1, 0], [1, 1], [1, -1]];
 
   for (const [dr, dc] of directions) {
     let count = 1;
@@ -270,14 +277,14 @@ function highlightWin(cells) {
 //  승리 모달
 // ─────────────────────────────
 function showWinModal(player) {
-  const overlay  = document.getElementById('win-modal');
-  const stoneEl  = document.getElementById('modal-stone');
-  const titleEl  = document.getElementById('modal-title');
-  const msgEl    = document.getElementById('modal-msg');
+  const overlay = document.getElementById('win-modal');
+  const stoneEl = document.getElementById('modal-stone');
+  const titleEl = document.getElementById('modal-title');
+  const msgEl = document.getElementById('modal-msg');
 
   stoneEl.className = 'modal-stone ' + (player === BLACK ? 'black' : 'white');
   titleEl.textContent = '승리!';
-  msgEl.textContent   = (player === BLACK ? '흑돌' : '백돌') + '이 승리했습니다! 🎉';
+  msgEl.textContent = (player === BLACK ? '흑돌' : '백돌') + '이 승리했습니다! 🎉';
 
   document.getElementById('status-text').textContent = (player === BLACK ? '흑돌' : '백돌') + ' 승리!';
 
@@ -317,7 +324,7 @@ canvas.addEventListener('mousemove', (e) => {
   const scaleX = canvas.width / rect.width;
   const scaleY = canvas.height / rect.height;
   const x = (e.clientX - rect.left) * scaleX;
-  const y = (e.clientY - rect.top)  * scaleY;
+  const y = (e.clientY - rect.top) * scaleY;
 
   const col = Math.round((x - MARGIN) / CELL_SIZE);
   const row = Math.round((y - MARGIN) / CELL_SIZE);
@@ -343,7 +350,7 @@ canvas.addEventListener('click', (e) => {
   const scaleX = canvas.width / rect.width;
   const scaleY = canvas.height / rect.height;
   const x = (e.clientX - rect.left) * scaleX;
-  const y = (e.clientY - rect.top)  * scaleY;
+  const y = (e.clientY - rect.top) * scaleY;
 
   const col = Math.round((x - MARGIN) / CELL_SIZE);
   const row = Math.round((y - MARGIN) / CELL_SIZE);
@@ -358,11 +365,11 @@ canvas.addEventListener('touchend', (e) => {
   e.preventDefault();
   if (gameOver) return;
   const touch = e.changedTouches[0];
-  const rect  = canvas.getBoundingClientRect();
+  const rect = canvas.getBoundingClientRect();
   const scaleX = canvas.width / rect.width;
   const scaleY = canvas.height / rect.height;
   const x = (touch.clientX - rect.left) * scaleX;
-  const y = (touch.clientY - rect.top)  * scaleY;
+  const y = (touch.clientY - rect.top) * scaleY;
   const col = Math.round((x - MARGIN) / CELL_SIZE);
   const row = Math.round((y - MARGIN) / CELL_SIZE);
   if (row >= 0 && row < GRID_SIZE && col >= 0 && col < GRID_SIZE) {
