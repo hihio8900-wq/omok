@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>오목 (Omok)</title>
+  <meta name="description" content="두 명이 즐기는 웹 기반 오목 게임입니다." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;900&family=Inter:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="bg-orbs">
+    <div class="orb orb1"></div>
+    <div class="orb orb2"></div>
+    <div class="orb orb3"></div>
+  </div>
+
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <h1 class="title">⬤ 오목</h1>
+      <p class="subtitle">Gomoku · Five in a Row</p>
+    </header>
+
+    <!-- Score Board -->
+    <div class="scoreboard">
+      <div class="player-card" id="player-black-card">
+        <div class="player-stone black-stone"></div>
+        <div class="player-info">
+          <span class="player-label">흑돌</span>
+          <span class="player-score" id="score-black">0</span>
+        </div>
+        <div class="turn-indicator" id="turn-black">●</div>
+      </div>
+
+      <div class="vs-badge">VS</div>
+
+      <div class="player-card" id="player-white-card">
+        <div class="player-stone white-stone"></div>
+        <div class="player-info">
+          <span class="player-label">백돌</span>
+          <span class="player-score" id="score-white">0</span>
+        </div>
+        <div class="turn-indicator" id="turn-white">●</div>
+      </div>
+    </div>
+
+    <!-- Status -->
+    <div class="status-bar">
+      <span id="status-text">흑돌 차례입니다</span>
+    </div>
+
+    <!-- Board -->
+    <div class="board-wrapper">
+      <canvas id="omok-board" width="570" height="570"></canvas>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <button class="btn btn-primary" id="btn-restart" onclick="restartGame()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        새 게임
+      </button>
+      <button class="btn btn-secondary" id="btn-undo" onclick="undoMove()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5v0a5.5 5.5 0 0 1-5.5 5.5H11"/></svg>
+        무르기
+      </button>
+    </div>
+  </div>
+
+  <!-- Win Modal -->
+  <div class="modal-overlay" id="win-modal">
+    <div class="modal">
+      <div class="modal-stone" id="modal-stone"></div>
+      <h2 class="modal-title" id="modal-title">승리!</h2>
+      <p class="modal-msg" id="modal-msg">흑돌이 승리했습니다! 🎉</p>
+      <div class="modal-actions">
+        <button class="btn btn-primary" onclick="closeModalAndRestart()">다시 게임</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
